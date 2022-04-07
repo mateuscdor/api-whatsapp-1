@@ -5,10 +5,6 @@ const { unlink, existsSync, mkdirSync } = require('fs')
 const ZDGPath = './ZDGSessions/'
 const ZDGAuth = 'ZDG_auth_info.json'
 
-//DECLARAÇÃO DOS BOTÕES
-
-
-
 //BOTÕES - Cancelou os termos
 const op3 = {
    id: 'op3',
@@ -29,7 +25,7 @@ const btnCancelar = {
    displayText: 'CANCELAR',
 }
 
-
+//DECLARAÇÃO DOS BOTÕES
 //BOTÕES - Confirmação do CPF
 const ConfirmCPF = {
     id: 'confirmCPF',
@@ -51,6 +47,7 @@ const btnConfirmCPF = [
    { index: 1, quickReplyButton: ConfirmCPF },
    { index: 2, quickReplyButton: CancelCPF },
 ]
+
 //CHECA SE A MENSAGEM É DE ALGUM GRUPO
 const ZDGGroupCheck = (jid) => {
    const regexp = new RegExp(/^\d{18}@g.us$/)
@@ -123,7 +120,7 @@ const ZDGConnection = async () => {
          console.log("© BOT-ZDG - MENSAGEM : ", msg)
          ZDGsock.sendReadReceipt(jid, msg.key.participant, [msg.key.id])
          
-         //REQUISIÇÕES SEM
+         //REQUISIÇÕES SEM USO MANUAL
          if(isBlank(conversation)){
             //INFORME O CPF - CONCORDOU COM OS TERMOS
             if (msg.message.templateButtonReplyMessage.selectedId === 'confirmTerms'){
@@ -152,7 +149,10 @@ const ZDGConnection = async () => {
                 ZDGSendMessage(jid, { text: 'Fazendo requisicao na api' })
                    .then(result => {
                       console.log('RESULT: ', result)
-                      console.log('btn SIM cpf: ' +cpf)
+
+                     //cpf == conversation;
+                     console.log(result.key.remoteJid)
+
                    })
                    .catch(err => console.log('ERROR: ', err))
             } 

@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({
   extended: true
 }));
-
+//teste
 const ZDGUpdate = (ZDGsock) => { //monitora os updates de conexao
    ZDGsock.on('connection.update', ({ connection, lastDisconnect, qr }) => {
       if (qr){
