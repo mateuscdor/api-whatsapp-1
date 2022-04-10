@@ -8,32 +8,32 @@ const ZDGAuth = 'ZDG_auth_info.json'
 //BOTÕES - Cancelou os termos
 const op3 = {
    id: 'op3',
-   displayText: 'Não quero mais receber mensagens.',
+   displayText: '❌ Não quero mais receber mensagens.',
 }
 const op4 = {
    id: 'op4',
-   displayText: 'Estou ocupado, nos falamos depois.',
+   displayText: '🕖 Estou ocupado, nos falamos depois.',
 }
 
 //BOTÕES - Primeira mensagem
 const btnProsseguir = {
     id: 'confirmTerms',
-   displayText: 'PROSSEGUIR',
+   displayText: '✅ ACEITAR TERMOS',
 }
 const btnCancelar = {
    id: 'cancelTerms',
-   displayText: 'CANCELAR',
+   displayText: '❌ CANCELAR',
 }
 
 //DECLARAÇÃO DOS BOTÕES
 //BOTÕES - Confirmação do CPF
 const ConfirmCPF = {
     id: 'confirmCPF',
-    displayText: 'CONFIRMAR',
+    displayText: '✅ ESTE É MEU CPF',
 }
 const CancelCPF = {
     id: 'cancelCPF',
-    displayText: 'CANCELAR',
+    displayText: '↩️ DIGITAR NOVAMENTE',
 }
 const btnCancelTerms = [
    { index: 1, quickReplyButton: op3 },
@@ -186,7 +186,7 @@ const ZDGConnection = async () => {
             //MENSAGEM INICIAL
             if (msg.message.conversation.length !== 11 && msg.message.conversation.toLowerCase() !== '1' && msg.message.conversation.toLowerCase() !== '2' && msg.message.conversation.toLowerCase() !== '3' && msg.message.conversation.toLowerCase() !== '4') {     
                const btnImage = {
-                  caption: '\nOlá *'+  user +  '*, Bem-vindo ao Bot Play\nPara prosseguir, *aceite* os *Termos de Uso* e *Política de Privacidade* \n',
+                  caption: '\nOlá '+  user +  ', Aqui é o Bot Play Servicos\n\nPara prosseguir, aceite os *Termos de Uso* e *Política de Privacidade* \n',
                   footer: '✅ Play Serviços',
                   image: {
                      url: './assets/icone.png',
@@ -200,7 +200,7 @@ const ZDGConnection = async () => {
             //usuario digita o CPF
             if (msg.message.conversation.length === 11) { //validar cpf com REGEX
                 const btnCPF = {
-                   text: user+', por favor confime o CPF:\n'+msg.message.conversation,
+                   text: '👇 *Confirme se o CPF está correto *\n\n'+msg.message.conversation,
                    //footer: '© Play Serviços',
                    templateButtons: btnConfirmCPF
                 }
