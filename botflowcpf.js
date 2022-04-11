@@ -121,21 +121,20 @@ const ZDGConnection = async () => {
       const jid = msg.key.remoteJid
       const user = msg.pushName;
       const conversation = msg.message.conversation;
-
-      const regJid = /^[0-9]/gi;
-
-      function getCPF(cpf) {
+      //const regJid = /^[0-9]/gi;
+      
+      async function getCPF(cpf)  {
          const data = {
                "cpf": `${cpf}`,
                "telefone": "67996582103",
                "email": "",
                "cep": 79670000,
-               "tipo": 2
+               "tipo": 2,
          }
-         axios
+         return axios
             .post(`${url}parceiros/validacoes?praca_id=3`, data, { headers: { 'Authorization': `Basic ${token}` }, })
             .then(response => {
-               console.log(response.data)
+               return response.data.nome;              
             })
             .catch(error => console.log())
       }
@@ -208,7 +207,8 @@ const ZDGConnection = async () => {
          //REQUISIÇÕES RECEBIDAS MANUALMENTE
          else if (conversation) {
             //MENSAGEM INICIAL
-            if (msg.message.conversation.length !== 11 && msg.message.conversation.toLowerCase() !== '1' && msg.message.conversation.toLowerCase() !== '2' && msg.message.conversation.toLowerCase() !== '3' && msg.message.conversation.toLowerCase() !== '4') {
+            //if (msg.message.conversation.length !== 11 && msg.message.conversation.toLowerCase() !== '1' && msg.message.conversation.toLowerCase() !== '2' && msg.message.conversation.toLowerCase() !== '3' && msg.message.conversation.toLowerCase() !== '4') {
+            if(conversation){
                const btnImage = {
                   caption: '\nOlá ' + user + ', Aqui é o Bot Play Servicos\n\nPara prosseguir, aceite os *Termos de Uso* e *Política de Privacidade* \n',
                   footer: '✅ Play Serviços',
@@ -230,10 +230,11 @@ const ZDGConnection = async () => {
                   templateButtons: btnConfirmCPF
                }
                ZDGSendMessage(jid, btnCPF)
-                  .then(result => {
+                  .then(async result => {
                      console.log('RESULT: ', result);              
-                     console.log(regJid.exec(msg.key.remoteJid)[0]);
-                     getCPF(conversation)
+                     console.log(msg.key.remoteJid.replace(/[^0-9]/g,''));
+                     nome = await getCPF(conversation)
+                     console.log(nome)
                   })
                   .catch(err => console.log('ERROR: ', err))
             }
