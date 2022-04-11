@@ -1,3 +1,9 @@
+const axios = require('axios')
+const url = 'https://api.playservicos.com.br:3002/'
+const username = 'claudioplayservicos@gmail.com'
+const password = 'claudio123@'
+const token = Buffer.from(`${username}:${password}`, 'utf8').toString('base64')
+
 const makeWaSocket = require('@adiwajshing/baileys').default
 const { delay, useSingleFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@adiwajshing/baileys')
 const P = require('pino')
@@ -17,7 +23,7 @@ const op4 = {
 
 //BOTÕES - Primeira mensagem
 const btnProsseguir = {
-    id: 'confirmTerms',
+   id: 'confirmTerms',
    displayText: '✅ ACEITAR TERMOS',
 }
 const btnCancelar = {
@@ -28,12 +34,12 @@ const btnCancelar = {
 //DECLARAÇÃO DOS BOTÕES
 //BOTÕES - Confirmação do CPF
 const ConfirmCPF = {
-    id: 'confirmCPF',
-    displayText: '✅ ESTE É MEU CPF',
+   id: 'confirmCPF',
+   displayText: '✅ ESTE É MEU CPF',
 }
 const CancelCPF = {
-    id: 'cancelCPF',
-    displayText: '↩️ DIGITAR NOVAMENTE',
+   id: 'cancelCPF',
+   displayText: '↩️ DIGITAR NOVAMENTE',
 }
 const btnCancelTerms = [
    { index: 1, quickReplyButton: op3 },
@@ -57,7 +63,7 @@ const ZDGGroupCheck = (jid) => {
 const ZDGUpdate = (ZDGsock) => {
    //ESTABELECE CONEXÃO COM O WHATSAPP
    ZDGsock.on('connection.update', ({ connection, lastDisconnect, qr }) => {
-      if (qr){
+      if (qr) {
          console.log('© BOT-ZDG - Qrcode: ', qr);
       };
       if (connection === 'close') {
@@ -71,7 +77,7 @@ const ZDGUpdate = (ZDGsock) => {
             })
          }
       }
-      if (connection === 'open'){
+      if (connection === 'open') {
          console.log('© BOT-PLAY - CONECTADO')
       }
    })
@@ -111,26 +117,44 @@ const ZDGConnection = async () => {
    }
 
    ZDGsock.ev.on('messages.upsert', async ({ messages, type }) => {
-   const msg = messages[0]
-   const jid = msg.key.remoteJid
-   const user = msg.pushName;
-   const conversation = msg.message.conversation;
+      const msg = messages[0]
+      const jid = msg.key.remoteJid
+      const user = msg.pushName;
+      const conversation = msg.message.conversation;
+
+      const regJid = /^[0-9]/gi;
+
+      function getCPF(cpf) {
+         const data = {
+               "cpf": `${cpf}`,
+               "telefone": "67996582103",
+               "email": "",
+               "cep": 79670000,
+               "tipo": 2
+         }
+         axios
+            .post(`${url}parceiros/validacoes?praca_id=3`, data, { headers: { 'Authorization': `Basic ${token}` }, })
+            .then(response => {
+               console.log(response.data)
+            })
+            .catch(error => console.log())
+      }
 
       if (!ZDGGroupCheck(jid) && !msg.key.fromMe && jid !== 'status@broadcast') {
          console.log("© BOT-ZDG - MENSAGEM : ", msg)
          ZDGsock.sendReadReceipt(jid, msg.key.participant, [msg.key.id])
-         
-         //REQUISIÇÕES SEM USO MANUAL
-         if(isBlank(conversation)){
-            //INFORME O CPF - CONCORDOU COM OS TERMOS
-            if (msg.message.templateButtonReplyMessage.selectedId === 'confirmTerms'){
 
-                ZDGSendMessage(jid, { text: user + ', Informe seu CPF' })
-                .then(result => {
-                    console.log('RESULT: ', result)
-                            
-                })
-                .catch(err => console.log('ERROR: ', err))
+         //REQUISIÇÕES SEM USO MANUAL
+         if (isBlank(conversation)) {
+            //ONCORDOU COM OS TERMOS - informe o cpf
+            if (msg.message.templateButtonReplyMessage.selectedId === 'confirmTerms') {
+
+               ZDGSendMessage(jid, { text: user + ', Informe seu CPF' })
+                  .then(result => {
+                     console.log('RESULT: ', result)
+
+                  })
+                  .catch(err => console.log('ERROR: ', err))
             }
             //CANCELOU OS TERMOS
             if (msg.message.templateButtonReplyMessage.selectedId === 'cancelTerms') {
@@ -145,36 +169,36 @@ const ZDGConnection = async () => {
 
             //OPÇÕES AO CONFIRMAR TERMOS DE USO
             //confirmou o cpf
-            if (msg.message.templateButtonReplyMessage.selectedId === 'confirmCPF') {  
-                ZDGSendMessage(jid, { text: 'Fazendo requisicao na api' })
-                   .then(result => {
-                      console.log('RESULT: ', result)
+            if (msg.message.templateButtonReplyMessage.selectedId === 'confirmCPF') {
+               ZDGSendMessage(jid, { text: 'Fazendo requisicao na api' })
+                  .then(result => {
+                     console.log('RESULT: ', result)
 
                      //cpf == conversation;
                      console.log(result.key.remoteJid)
 
-                   })
-                   .catch(err => console.log('ERROR: ', err))
-            } 
+                  })
+                  .catch(err => console.log('ERROR: ', err))
+            }
             //cpf não confirmado
-            if(msg.message.templateButtonReplyMessage.selectedId === 'cancelCPF') {
-                ZDGSendMessage(jid, { text: 'Por favor, digite seu cpf novamente' })
-                   .then(result => {
-                      console.log('RESULT: ', result)
-                      console.log('btn NAO cpf: ' +cpf)
-                   })
-                   .catch(err => console.log('ERROR: ', err))
+            if (msg.message.templateButtonReplyMessage.selectedId === 'cancelCPF') {
+               ZDGSendMessage(jid, { text: 'Por favor, digite seu cpf novamente' })
+                  .then(result => {
+                     console.log('RESULT: ', result)
+                     console.log('btn NAO cpf: ' + cpf)
+                  })
+                  .catch(err => console.log('ERROR: ', err))
             }
 
             //OPÇÕES DE CANCELAMENTO DOS TERMOS
             //opção não enviar mais mensagens
-            if(msg.message.templateButtonReplyMessage.selectedId === 'op3'){
+            if (msg.message.templateButtonReplyMessage.selectedId === 'op3') {
                ZDGSendMessage(jid, { text: 'Implementado até aqui.' })
                   .then(result => console.log('RESULT: ', result))
                   .catch(err => console.log('ERROR: ', err))
             }
             //opção estou ocupado
-            if(msg.message.templateButtonReplyMessage.selectedId === 'op4'){ 
+            if (msg.message.templateButtonReplyMessage.selectedId === 'op4') {
                ZDGSendMessage(jid, { text: 'Implementado até aqui.' })
                   .then(result => console.log('RESULT: ', result))
                   .catch(err => console.log('ERROR: ', err))
@@ -182,11 +206,11 @@ const ZDGConnection = async () => {
          }
 
          //REQUISIÇÕES RECEBIDAS MANUALMENTE
-         else if(conversation){   
+         else if (conversation) {
             //MENSAGEM INICIAL
-            if (msg.message.conversation.length !== 11 && msg.message.conversation.toLowerCase() !== '1' && msg.message.conversation.toLowerCase() !== '2' && msg.message.conversation.toLowerCase() !== '3' && msg.message.conversation.toLowerCase() !== '4') {     
+            if (msg.message.conversation.length !== 11 && msg.message.conversation.toLowerCase() !== '1' && msg.message.conversation.toLowerCase() !== '2' && msg.message.conversation.toLowerCase() !== '3' && msg.message.conversation.toLowerCase() !== '4') {
                const btnImage = {
-                  caption: '\nOlá '+  user +  ', Aqui é o Bot Play Servicos\n\nPara prosseguir, aceite os *Termos de Uso* e *Política de Privacidade* \n',
+                  caption: '\nOlá ' + user + ', Aqui é o Bot Play Servicos\n\nPara prosseguir, aceite os *Termos de Uso* e *Política de Privacidade* \n',
                   footer: '✅ Play Serviços',
                   image: {
                      url: './assets/icone.png',
@@ -197,34 +221,40 @@ const ZDGConnection = async () => {
                   .then(result => console.log('RESULT: ', result))
                   .catch(err => console.log('ERROR: ', err))
             }
-            //usuario digita o CPF
+            //usuario digitou o CPF
             if (msg.message.conversation.length === 11) { //validar cpf com REGEX
-                const btnCPF = {
-                   text: '👇 *Confirme se o CPF está correto *\n\n'+msg.message.conversation,
-                   //footer: '© Play Serviços',
-                   templateButtons: btnConfirmCPF
-                }
-                ZDGSendMessage(jid, btnCPF)
-                   .then(result => {
-                      console.log('RESULT: ', result)
-                      cpf = msg.message.conversation
-                      console.log('cpf: ' +cpf)
-                   })
-                   .catch(err => console.log('ERROR: ', err))  
+            //if(getCPF(conversation)){
+               const btnCPF = {
+                  text: '👇 *Confirme se o CPF está correto *\n\n' + msg.message.conversation,
+                  //footer: '© Play Serviços',
+                  templateButtons: btnConfirmCPF
+               }
+               ZDGSendMessage(jid, btnCPF)
+                  .then(result => {
+                     console.log('RESULT: ', result);              
+                     console.log(regJid.exec(msg.key.remoteJid)[0]);
+                     getCPF(conversation)
+                  })
+                  .catch(err => console.log('ERROR: ', err))
             }
-            if (msg.message.conversation.toLowerCase() === '1') {     
+
+         
+
+            if (msg.message.conversation.toLowerCase() === '1') {
                ZDGSendMessage(jid, { text: user + ', obrigado pela sua resposta.' })
                   .then(result => console.log('RESULT: ', result))
                   .catch(err => console.log('ERROR: ', err))
             }
-            if (msg.message.conversation.toLowerCase() === '2') {     
+            if (msg.message.conversation.toLowerCase() === '2') {
                ZDGSendMessage(jid, { text: user + ', você pode saber mais sobre a comunidade no link https://zapdasgalaxias.com.br' })
                   .then(result => console.log('RESULT: ', result))
                   .catch(err => console.log('ERROR: ', err))
             }
+
          }
+
       }
    })
 }
 
-ZDGConnection()
+module.exports = ZDGConnection()
