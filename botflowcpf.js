@@ -41,6 +41,14 @@ const CancelCPF = {
    id: 'cancelCPF',
    displayText: '↩️ DIGITAR NOVAMENTE',
 }
+const Buy = {
+   id: 'buyTitle',
+   displayText: '🤑 COMPRAR TÍTULO',
+}
+const Cancel = {
+   id: 'cancelTitle',
+   displayText: '❌ CANCELAR COMPRA',
+}
 const btnCancelTerms = [
    { index: 1, quickReplyButton: op3 },
    { index: 2, quickReplyButton: op4 },
@@ -52,6 +60,10 @@ const btnFirstMessage = [
 const btnConfirmCPF = [
    { index: 1, quickReplyButton: ConfirmCPF },
    { index: 2, quickReplyButton: CancelCPF },
+]
+const btnComprarTitulo = [
+   { index: 1, quickReplyButton: Buy },
+   { index: 2, quickReplyButton: Cancel },
 ]
 
 //CHECA SE A MENSAGEM É DE ALGUM GRUPO
@@ -122,20 +134,23 @@ const ZDGConnection = async () => {
       const user = msg.pushName;
       const conversation = msg.message.conversation;
       //const regJid = /^[0-9]/gi;
-      
-      async function getCPF(cpf, numero)  {
+
+      async function postBuscaTitulo(){
+
+      }
+      async function getValidarCliente(cpf, numero) {
          const data = {
-               "cpf": `${cpf}`,
-               "telefone": `${numero}`,
-               "email": "",
-               "cep": 79670000,
-               "tipo": 2,
+            "cpf": `${cpf}`,
+            "telefone": `${numero}`,
+            "email": "",
+            "cep": "",
+            "tipo": 2,
          }
          return axios
             .post(`${url}parceiros/validacoes?praca_id=3`, data, { headers: { 'Authorization': `Basic ${token}` }, })
-            .then(response => {    
-               console.log(response.data)       
-               return response.data.existe;              
+            .then(response => {
+               console.log(response.data)
+               return response.data.existe;
             })
             .catch(error => console.log())
       }
@@ -172,7 +187,7 @@ const ZDGConnection = async () => {
             if (msg.message.templateButtonReplyMessage.selectedId === 'confirmCPF') {
                ZDGSendMessage(jid, { text: 'Fazendo requisicao na api' })
                   .then(async result => {
-                     console.log('RESULT: ', result)                  
+                     console.log('RESULT: ', result)
                   })
                   .catch(err => console.log('ERROR: ', err))
             }
@@ -205,7 +220,7 @@ const ZDGConnection = async () => {
          else if (conversation) {
             //MENSAGEM INICIAL
             if (msg.message.conversation.length !== 11 && msg.message.conversation.toLowerCase() !== '1' && msg.message.conversation.toLowerCase() !== '2' && msg.message.conversation.toLowerCase() !== '3' && msg.message.conversation.toLowerCase() !== '4') {
-            //if(conversation){
+               //if(conversation){
                const btnImage = {
                   caption: '\nOlá ' + user + ', Aqui é o Bot Play Servicos\n\nPara prosseguir, aceite os *Termos de Uso* e *Política de Privacidade* \n',
                   footer: '✅ Play Serviços',
@@ -218,33 +233,44 @@ const ZDGConnection = async () => {
                   .then(result => console.log('RESULT: ', result))
                   .catch(err => console.log('ERROR: ', err))
             }
-            //usuario digitou o CPF
-            if (msg.message.conversation.length === 11) { //validar cpf com REGEX
-               const btnCPF = {
-                  text: `Olá ${cpf}\n\n` + msg.message.conversation,
-                  templateButtons: btnConfirmCPF
-               }
-               ZDGSendMessage(jid, btnCPF)
+            //DIGITOU O CPF
+            if (msg.message.conversation.length === 11) { //VALIDAR COM REGEX               
+               const comprarTitulo = { 
+                  text: `✅ UM CADASTRO COM SEU CPF FOI ENCONTRADO!
+                  \n\nAqui estão alguns títulos disponíveis para você realizar uma compra!
+                  \nImplementar Api da Play -------`,
+                  templateButtons: btnComprarTitulo
+               }               
+               
+               ZDGSendMessage(jid, { text: '🤖 _BUSCANDO INFORMAÇÕES_ 🤖' })
                   .then(async result => {
-                     console.log('RESULT: ', result);    
+                     console.log('RESULT: ', result);
                      
+                     //TRANSFORMAR O Jid em um número acessivel para a api
                      n1 = msg.key.remoteJid.replace(/[^0-9]/g, '')
                      n2 = [].slice.call(n1)
                      n2.splice(4, 0, '9')
-                     numero = n2.join('');                     
-                     cpf = conversation;                  
-                     if(await getCPF(cpf, numero)){
-                        console.log(getCPF())
-                        console.log('USUÁRIO ENCONTRADO!')
-                     }
-
                      
+                     //ARMAZENA as informações
+                     numero = n2.join('');
+                     cpf = conversation;
+                     
+                     //SE encontrar o usuário .... SENÃO encontrar.
+                     if (await getValidarCliente(cpf, numero)) {
+                        ZDGSendMessage(jid, comprarTitulo)
+                           .then(result => {
+                              console.log('RESULT: ', result)
+                           }) 
+                           .catch(err => console.log('ERROR: ', err))
+                     } else {
+                        ZDGSendMessage(jid, { text: '❌ Cadastro não encontrado.\n\nPor favor, digite o CPF novamente' }) //DIGITE NOVAMENTE
+                           .then(result => {
+                              console.log('RESULT: ', result)
+                           }) .catch(err => console.log('ERROR: ', err))
+                     }
                      //await getCPF(cpf, numero) //extraio o cpf
-                  }) 
-                  .catch(err => console.log('ERROR: ', err))
+                  }) .catch(err => console.log('ERROR: ', err))
             }
-
-         
 
             if (msg.message.conversation.toLowerCase() === '1') {
                ZDGSendMessage(jid, { text: user + ', obrigado pela sua resposta.' })
