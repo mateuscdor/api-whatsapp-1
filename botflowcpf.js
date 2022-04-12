@@ -123,18 +123,19 @@ const ZDGConnection = async () => {
       const conversation = msg.message.conversation;
       //const regJid = /^[0-9]/gi;
       
-      async function getCPF(cpf)  {
+      async function getCPF(cpf, numero)  {
          const data = {
                "cpf": `${cpf}`,
-               "telefone": "67996582103",
+               "telefone": `${numero}`,
                "email": "",
                "cep": 79670000,
                "tipo": 2,
          }
          return axios
             .post(`${url}parceiros/validacoes?praca_id=3`, data, { headers: { 'Authorization': `Basic ${token}` }, })
-            .then(response => {
-               return response.data.nome;              
+            .then(response => {    
+               console.log(response.data)       
+               return response.data.existe;              
             })
             .catch(error => console.log())
       }
@@ -166,16 +167,12 @@ const ZDGConnection = async () => {
                   .catch(err => console.log('ERROR: ', err))
             }
 
-            //OPÇÕES AO CONFIRMAR TERMOS DE USO
+            //APÓS CONFIRMAR TERMOS DE USO
             //confirmou o cpf
             if (msg.message.templateButtonReplyMessage.selectedId === 'confirmCPF') {
                ZDGSendMessage(jid, { text: 'Fazendo requisicao na api' })
-                  .then(result => {
-                     console.log('RESULT: ', result)
-
-                     //cpf == conversation;
-                     console.log(result.key.remoteJid)
-
+                  .then(async result => {
+                     console.log('RESULT: ', result)                  
                   })
                   .catch(err => console.log('ERROR: ', err))
             }
@@ -207,8 +204,8 @@ const ZDGConnection = async () => {
          //REQUISIÇÕES RECEBIDAS MANUALMENTE
          else if (conversation) {
             //MENSAGEM INICIAL
-            //if (msg.message.conversation.length !== 11 && msg.message.conversation.toLowerCase() !== '1' && msg.message.conversation.toLowerCase() !== '2' && msg.message.conversation.toLowerCase() !== '3' && msg.message.conversation.toLowerCase() !== '4') {
-            if(conversation){
+            if (msg.message.conversation.length !== 11 && msg.message.conversation.toLowerCase() !== '1' && msg.message.conversation.toLowerCase() !== '2' && msg.message.conversation.toLowerCase() !== '3' && msg.message.conversation.toLowerCase() !== '4') {
+            //if(conversation){
                const btnImage = {
                   caption: '\nOlá ' + user + ', Aqui é o Bot Play Servicos\n\nPara prosseguir, aceite os *Termos de Uso* e *Política de Privacidade* \n',
                   footer: '✅ Play Serviços',
@@ -223,19 +220,27 @@ const ZDGConnection = async () => {
             }
             //usuario digitou o CPF
             if (msg.message.conversation.length === 11) { //validar cpf com REGEX
-            //if(getCPF(conversation)){
                const btnCPF = {
-                  text: '👇 *Confirme se o CPF está correto *\n\n' + msg.message.conversation,
-                  //footer: '© Play Serviços',
+                  text: `Olá ${cpf}\n\n` + msg.message.conversation,
                   templateButtons: btnConfirmCPF
                }
                ZDGSendMessage(jid, btnCPF)
                   .then(async result => {
-                     console.log('RESULT: ', result);              
-                     console.log(msg.key.remoteJid.replace(/[^0-9]/g,''));
-                     nome = await getCPF(conversation)
-                     console.log(nome)
-                  })
+                     console.log('RESULT: ', result);    
+                     
+                     n1 = msg.key.remoteJid.replace(/[^0-9]/g, '')
+                     n2 = [].slice.call(n1)
+                     n2.splice(4, 0, '9')
+                     numero = n2.join('');                     
+                     cpf = conversation;                  
+                     if(await getCPF(cpf, numero)){
+                        console.log(getCPF())
+                        console.log('USUÁRIO ENCONTRADO!')
+                     }
+
+                     
+                     //await getCPF(cpf, numero) //extraio o cpf
+                  }) 
                   .catch(err => console.log('ERROR: ', err))
             }
 
