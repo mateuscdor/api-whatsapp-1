@@ -133,12 +133,29 @@ const ZDGConnection = async () => {
       const jid = msg.key.remoteJid
       const user = msg.pushName;
       const conversation = msg.message.conversation;
-      //const regJid = /^[0-9]/gi;
 
-      async function postBuscaTitulo(){
 
+      async function getBuscarEtapas(){
+         return axios
+            .get(`${url}parceiros/etapas?praca_id=3`, { headers: { 'Authorization': `Basic ${token}` }, })
+            .then(response => {
+               console.log(response.data.etapas[0])
+
+               return `\nDescrição: ${response.data.etapas[0].descricao}\nDia do sorteio: ${response.data.etapas[0].sorteio}\nDia do sorteio: ${response.data.etapas[0].sorteio}`
+                  
+            })
+            .catch(error => console.log(error.request))
       }
-      async function getValidarCliente(cpf, numero) {
+      async function getBuscaTitulo(){
+         return axios
+            .get(`${url}parceiros/certificados?praca_id=3`, { headers: { 'Authorization': `Basic ${token}` }, })
+            .then(response => {
+               return response.data
+            })
+            .catch(error => console.log(error.request))
+      }      
+
+      async function postValidarCliente(cpf, numero) {
          const data = {
             "cpf": `${cpf}`,
             "telefone": `${numero}`,
@@ -149,7 +166,6 @@ const ZDGConnection = async () => {
          return axios
             .post(`${url}parceiros/validacoes?praca_id=3`, data, { headers: { 'Authorization': `Basic ${token}` }, })
             .then(response => {
-               console.log(response.data)
                return response.data.existe;
             })
             .catch(error => console.log())
@@ -242,23 +258,22 @@ const ZDGConnection = async () => {
                   templateButtons: btnComprarTitulo
                }               
                
-               ZDGSendMessage(jid, { text: '🤖 _BUSCANDO INFORMAÇÕES_ 🤖' })
+               ZDGSendMessage(jid, { text: '🤖 _*BUSCANDO INFORMAÇÕES*_ 🤖' })
                   .then(async result => {
                      console.log('RESULT: ', result);
                      
-                     //TRANSFORMAR O Jid em um número acessivel para a api
-                     n1 = msg.key.remoteJid.replace(/[^0-9]/g, '')
-                     n2 = [].slice.call(n1)
-                     n2.splice(4, 0, '9')
+                     //TRANSFORMAR O Jid em um número acessivel para a api              
+                     let formatacaoJid = msg.key.remoteJid.replace(/[^0-9]/g, '')
+                     formatacaoJid.substring
+                     numero = formatacaoJid.substring(0,4)+9+ formatacaoJid.substring(4)
+                     console.log(numero)
                      
-                     //ARMAZENA as informações
-                     numero = n2.join('');
-                     cpf = conversation;
+                     let cpf = conversation;  
                      
                      //SE encontrar o usuário .... SENÃO encontrar.
-                     if (await getValidarCliente(cpf, numero)) {
-                        ZDGSendMessage(jid, comprarTitulo)
-                           .then(result => {
+                     if (await postValidarCliente(cpf, numero)) {
+                        ZDGSendMessage(jid, {text: await getBuscarEtapas() })
+                           .then(async result => {
                               console.log('RESULT: ', result)
                            }) 
                            .catch(err => console.log('ERROR: ', err))
